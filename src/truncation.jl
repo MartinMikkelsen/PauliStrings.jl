@@ -1,10 +1,10 @@
 
 """
-    truncate(o::Operator, N::Int; keepnorm::Bool = false)
+    truncate(o::Operator, max_lenght::Int; keepnorm::Bool = false)
 
-Remove all terms of length > N.
-Keep all terms of length <= N.
-i.e remove all M-local terms with M>N
+Remove all terms of length > max_lenght.
+Keep all terms of length <= max_lenght.
+i.e remove all M-local terms with M>max_lenght
 
 # Example
 ```julia
@@ -21,19 +21,19 @@ julia> ps.truncate(A,2)
 (1.0 + 0.0im) XX11
 ```
 """
-function PauliStrings.truncate(o::Operator, N::Int; keepnorm::Bool = false)
-    o2 = Operator(o.N)
+function PauliStrings.truncate(o::Operator, max_lenght::Int; keepnorm::Bool=false)
+    o2 = typeof(o)(o.N)
     for i in 1:length(o)
         v = o.v[i]
         w = o.w[i]
-        if pauli_weight(v,w)<=N
+        if pauli_weight(v, w) <= max_lenght
             push!(o2.coef, o.coef[i])
             push!(o2.v, v)
             push!(o2.w, w)
         end
     end
     if keepnorm
-        return o2*opnorm(o)/opnorm(o2)
+        return o2 * opnorm(o) / opnorm(o2)
     end
     return o2
 end
@@ -64,12 +64,12 @@ julia> k_local_part(A,2)
 ```
 """
 function k_local_part(o::Operator, k::Int; atmost=false)
-    o2 = Operator(o.N)
+    o2 = typeof(o)(o.N)
     for i in 1:length(o)
         v = o.v[i]
         w = o.w[i]
-        l = pauli_weight(v,w)
-        if l==k || (atmost && l<=k)
+        l = pauli_weight(v, w)
+        if l == k || (atmost && l <= k)
             push!(o2.coef, o.coef[i])
             push!(o2.v, v)
             push!(o2.w, w)
@@ -82,9 +82,9 @@ end
 
 
 """
-    trim(o::Operator, N::Int; keepnorm::Bool = false, keep::Operator=Operator(N))
+    trim(o::Operator, max_strings::Int; keepnorm::Bool = false, keep::Operator=Operator(N))
 
-Keep the first N terms with largest coeficients.
+Keep the first `max_strings` terms with largest coeficients.
 
 `keepnorm` is set to true to keep the norm of o.
 
@@ -112,25 +112,25 @@ julia> trim(A,2;keep=B)
 (2.0 + 0.0im) XX11
 ```
 """
-function trim(o::Operator, N::Int; keepnorm::Bool = false, keep::Operator=Operator(0))
-    if length(o)<=N
+function trim(o::Operator, max_strings::Int; keepnorm::Bool=false, keep::Operator=Operator(0))
+    if length(o) <= max_strings
         return deepcopy(o)
     end
     # keep the N first indices
-    i = sortperm(abs.(o.coef), rev=true)[1:N]
+    i = sortperm(abs.(o.coef), rev=true)[1:max_strings]
     # add the string to keep in case there was a specified string to keep
     if length(keep) > 0
         for tau in 1:length(keep) #for each string tau in the keep operator
             # we check if tau is in o and has been removed
             j = posvw(keep.v[tau], keep.w[tau], o)
-            if !(j in i) && j!=0
+            if !(j in i) && j != 0
                 push!(i, j)
             end
         end
     end
-    o1 = Operator(o.N, o.v[i], o.w[i], o.coef[i] )
+    o1 = typeof(o)(o.N, o.v[i], o.w[i], o.coef[i])
     if keepnorm
-        return o1*opnorm(o)/opnorm(o1)
+        return o1 * opnorm(o) / opnorm(o1)
     end
     return o1
 end
@@ -140,17 +140,17 @@ end
 
 Keep terms with probability 1-exp(-alpha*abs(c)) where c is the weight of the term
 """
-function prune(o::Operator, alpha::Real; keepnorm::Bool = false)
+function prune(o::Operator, alpha::Real; keepnorm::Bool=false)
     i = Int[]
     for k in 1:length(o)
-        p = 1-exp(-alpha*abs(o.coef[k]))
+        p = 1 - exp(-alpha * abs(o.coef[k]))
         if rand() < p
-            push!(i,k)
+            push!(i, k)
         end
     end
-    o1 = Operator(o.N, o.v[i], o.w[i], o.coef[i] )
+    o1 = typeof(o)(o.N, o.v[i], o.w[i], o.coef[i])
     if keepnorm
-        return o1*opnorm(o)/opnorm(o1)
+        return o1 * opnorm(o) / opnorm(o1)
     end
     return o1
 end
@@ -174,17 +174,17 @@ julia> cutoff(A, 2.5)
 (4.0 + 0.0im) ZZXX
 ```
 """
-function cutoff(o::Operator, epsilon::Real; keepnorm::Bool = false)
-    o2 = Operator(o.N)
+function cutoff(o::Operator, epsilon::Real; keepnorm::Bool=false)
+    o2 = typeof(o)(o.N)
     for i in 1:length(o)
-        if abs(o.coef[i])>epsilon
+        if abs(o.coef[i]) > epsilon
             push!(o2.coef, o.coef[i])
             push!(o2.v, o.v[i])
             push!(o2.w, o.w[i])
         end
     end
     if keepnorm
-        return o2*opnorm(o)/opnorm(o2)
+        return o2 * opnorm(o) / opnorm(o2)
     end
     return o2
 end
@@ -205,12 +205,12 @@ A = add_noise(A, 0.1)
 function add_noise(o::Operator, g::Real)
     o2 = deepcopy(o)
     for i in 1:length(o)
-        o2.coef[i] *= exp(-pauli_weight(o.v[i],o.w[i])*g)
+        o2.coef[i] *= exp(-pauli_weight(o.v[i], o.w[i]) * g)
     end
     return o2
 end
 
 
 function participation(o::Operator)
-    return sum(o.coef .^ 4)/sum(o.coef .^ 2)^ 2
+    return sum(o.coef .^ 4) / sum(o.coef .^ 2)^2
 end

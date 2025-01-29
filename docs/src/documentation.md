@@ -35,7 +35,6 @@ Base.:+(o::Operator, term::String)
 
 
 ```@docs
-add(o1::Operator, o2::Operator)
 Base.:+(o1::Operator, o2::Operator)
 Base.:+(o::Operator, a::Number)
 Base.:+(a::Number, o::Operator)
@@ -154,7 +153,7 @@ rk4(H::Function, O::Operator, dt::Real, t::Real; hbar::Real=1, heisenberg=false)
 ```
 
 ```@docs
-equivalence_class(A1::Operator, H::Operator)
+equivalence_class(A1::Union{Operator64,Operator128}, H::Union{Operator64,Operator128})
 ```
 
 ```@docs
@@ -180,6 +179,58 @@ all_z(N::Int)
 set_coefs(o::Operator, coefs::Vector{T}) where T <: Number
 ```
 
+## Circuits
+
+```@docs
+Circuit(N::Int; max_strings=2^30, noise_amplitude=0)
+```
+```@docs
+push!(c::Circuit, gate::String, sites::Real...)
+```
+```@docs
+pushfirst!(c::Circuit, gate::String, sites::Real...)
+```
+
+```@docs
+XGate(N::Int, i::Int)
+```
+```@docs
+PhaseGate(N::Int, i::Int, theta::Real)
+```
+
+```@docs
+CXGate(N::Int, i::Int, j::Int)
+```
+
+```@docs
+SwapGate(N::Int, i::Int, j::Int)
+```
+```@docs
+CSXGate(N::Int, i::Int, j::Int)
+```
+
+```@docs
+CCXGate(N::Int, i::Int, j::Int, k::Int)
+```
+```@docs
+MCZGate(N::Int, sites::Int...)
+```
+```@docs
+grover_diffusion(N::Int, sites::Int...)
+```
+```@docs
+compile(c::Circuit)
+```
+```@docs
+expect(c::Circuit, state::String)
+```
+```@docs
+expect(c::Circuit, in_state::String, out_state::String)
+```
+
+
+
+
 ## Tools
 ```@docs
 compress(o::Operator)
@@ -197,13 +248,13 @@ op_to_dense(o::Operator)
 shift_left(O::Operator)
 ```
 ```@docs
-xcount(v::Int, w::Int)
+xcount(v::Unsigned, w::Unsigned)
 ```
 ```@docs
-ycount(v::Int, w::Int)
+ycount(v::Unsigned, w::Unsigned)
 ```
 ```@docs
-zcount(v::Int, w::Int)
+zcount(v::Unsigned, w::Unsigned)
 ```
 
 ```@docs
@@ -211,7 +262,7 @@ is_ts(o::Operator)
 ```
 
 ```@docs
-get_coef(o::Operator, v::Int, w::Int)
+get_coef(o::Operator, v::Unsigned, w::Unsigned)
 ```
 
 ```@docs
@@ -222,7 +273,7 @@ get_pauli(o::Operator, i::Int)
 ## Low level
 
 ```@docs
-com(v1::Int, w1::Int, v2::Int, w2::Int)
+com(v1::Unsigned, w1::Unsigned, v2::Unsigned, w2::Unsigned)
 ```
 
 ```@docs
@@ -230,15 +281,15 @@ string_to_vw(pauli::String)
 ```
 
 ```@docs
-vw_to_string(v::Int, w::Int, N::Int)
+vw_to_string(v::Unsigned, w::Unsigned, N::Int)
 ```
 
 ```@docs
-vw_in_o(v::Int, w::Int, o::Operator)
+vw_in_o(v::Unsigned, w::Unsigned, o::Operator)
 ```
 
 ```@docs
-Base.push!(o::Operator, c::Number, v::Int, w::Int)
+Base.push!(o::Operator, c::Number, v::Unsigned, w::Unsigned)
 ```
 
 ## Index

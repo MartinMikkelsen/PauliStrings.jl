@@ -12,8 +12,8 @@ get v and w from ref
 https://journals.aps.org/pra/abstract/10.1103/PhysRevA.68.042318
 """
 function getvw(pauli::String)
-    v::Int = 0
-    w::Int = 0
+    v::UInt = 0
+    w::UInt = 0
     for k in 1:length(pauli)
         if pauli[k] == 'X'
             w += 2^(k - 1)
@@ -40,7 +40,7 @@ string_to_vw(pauli::String) = getvw(pauli)
 """
     set_coefs(o::Operator, coefs::Vector{T}) where T <: Number
 
-Sets the coeficient of `o` to `coefs`. Inplace.
+Sets the coefficient of `o` to `coefs`. Inplace.
 
 ```julia
 A = Operator(4)
@@ -122,7 +122,7 @@ Identical signatures are available for `-`.
 
 # Examples
 k-local terms can be added by adding a tuple to the operator.
-The first element of the tuple is an optional coeficient.
+The first element of the tuple is an optional coefficient.
 The other element are couples (symbol,site) where symbol can be "X", "Y", "Z", "Sx", "Sy", "Sz", "S+", "S-" and site is an integer specifying the site on wich the symbol is acting.
 
 ```julia
@@ -211,11 +211,11 @@ function bit(n::Integer, i::Integer)
 end
 
 """
-    vw_to_string(v::Int, w::Int, N::Int)
+    vw_to_string(v::Int, w::Unsigned, N::Unsigned)
 
 convert v,w to a string and a phase
 """
-function vw_to_string(v::Int, w::Int, N::Int)
+function vw_to_string(v::Unsigned, w::Unsigned, N::Int)
     string::String = ""
     phase::Complex{Float64} = 1
     for i in 1:N
@@ -238,19 +238,6 @@ end
 
 
 
-
-function Base.:+(o1::Operator, o2::Operator)
-    if o1.N != o2.N
-        error("Adding operators of different dimention")
-    end
-    o3 = Operator(o1.N)
-    o3.v = vcat(o1.v, o2.v)
-    o3.w = vcat(o1.w, o2.w)
-    o3.coef = vcat(o1.coef, o2.coef)
-    return compress(o3)
-end
-
-
 """print an operator"""
 function Base.show(io::IO, o::Operator)
     for i in 1:length(o.v)
@@ -264,7 +251,7 @@ end
 """
     get_coefs(o::Operator)
 
-Return the list of coeficients in front of each strings.
+Return the list of coefficient in front of each strings.
 """
 function get_coefs(o::Operator)
     return [o.coef[i] / (1im)^ycount(o.v[i], o.w[i]) for i in 1:length(o)]
@@ -323,11 +310,12 @@ end
 
 
 """
-    get_coef(o::Operator, v::Int, w::Int)
+    get_coef(o::Operator, v::Unsigned, w::Unsigned)
+    get_coef(o::Operator, v::Integer, w::Integer)
 
-Return the coeficient of the string v,w in o.
+Return the coefficient of the string v,w in o.
 """
-function get_coef(o::Operator, v::Int, w::Int)
+function get_coef(o::Operator, v::Unsigned, w::Unsigned)
     for i in 1:length(o)
         if o.v[i] == v && o.w[i] == w
             return o.coef[i] / (1im)^ycount(v, w)
@@ -335,12 +323,13 @@ function get_coef(o::Operator, v::Int, w::Int)
     end
     return 0
 end
+get_coef(o::Operator, v::Integer, w::Integer) = get_coef(o, Unsigned(v), Unsigned(w))
 
 """
     get_pauli(o::Operator, i::Int)
 
 Return an operator that represent the i-th pauli string of `o'.
-Does not return the string multiplied by the coeficient. Only the string.
+Does not return the string multiplied by the coefficient. Only the string.
 """
 function get_pauli(o::Operator, i::Int)
     o2 = Operator(o.N)
